@@ -1,0 +1,110 @@
+/**** Definition of elements ****/
+Lquad =5.0;
+Ldipole=15.0;
+Lsext=0.5;
+qfType:QUADRUPOLE, L=Lquad, K1:=kf;             // Focusing Quadrupole, kfoc
+qdType:QUADRUPOLE, L=Lquad, K1:=kd;             // Defocusing Quadrupole, kdefoc
+BDType:SBEND, L=Ldipole, angle:=kb;              // Dipôle, kbending
+SPType1:SEXTUPOLE, L=Lsext, K2:=ks1;
+SPType2:SEXTUPOLE, L=Lsext, K2:=ks2;
+
+
+/**** Definition of the sequence ****/
+FODO:SEQUENCE, REFER=centre, L=100;
+qf: qfType, at=0+Lquad/2;                             // Focusing Quadrupole
+SP1: SPType1, at=5+Lsext/2;                           // First Sextupole based on strength ks1
+BD1: BDType, at=10+Ldipole/2;                         // Bending Dipole 1
+BD2: BDType, at=30+Ldipole/2;                         // Bending Dipole 2
+qd: qdType, at=50+Lquad/2;                            // Defocusing Quadrupole
+SP2: SPType2, at=55+Lsext/2;                          // Second Sextupole based on strength ks2
+BD3: BDType, at=60+Ldipole/2;                         // Bending Dipole 3
+BD4: BDType, at=80+Ldipole/2;                         // Bending Dipole 4
+ENDSEQUENCE;
+
+
+/**** Definition of the strength ****/
+kf=+0.0056;
+kd=-0.0056;
+kb=2*pi/736;                  // 736 dipoles for 2pi [rad] -> 0.0085 [rad] for 1 dipole
+ks1=2.40882e-2;
+ks2=-4.60474e-2;
+
+
+/**** Definition of the beam ****/
+beam, particle=proton, energy=7000;
+
+
+/**** Activation of the sequence ****/
+//MAKETHIN, SEQUENCE=FODO;
+use, sequence=FODO;
+
+
+/**** Operations ****/
+twiss, file="Tutorial_4_Part_2_7.twiss";
+plot, HAXIS=s, VAXIS=betx, bety, colour=100, interpolate;
+plot, HAXIS=s, VAXIS=dx, dy, colour=100, interpolate;
+
+
+/**** Matching ****/
+MATCH, sequence=FODO;
+  GLOBAL, DQ1=0.0;
+  GLOBAL, DQ2=0.0;
+  VARY, NAME=ks1, STEP=0.00001;
+  VARY, NAME=ks2, STEP=0.00001;
+  LMDIF, CALLS=50, TOLERANCE=1e-8;
+ENDMATCH;
+
+
+/*** Tracking ***/
+/*
+twiss;
+track,dump,deltap=0.01;
+//start, x= 1e-3, px=0, y= 1e-3, py=0;
+start, x=0, px=0, y= 0, py=0;
+start, x= 15e-3, px=0, y= 15e-3, py=0;
+start, x= 30e-3, px=0, y= 30e-3, py=0;
+start, x= 45e-3, px=0, y= 45e-3, py=0;
+start, x= 100e-3, px=0, y= 100e-3, py=0;
+//start, x= 1e-3, px=0, y= 1e-3, py=0;
+run,turns=100;
+endtrack;
+plot, table=track,haxis=x,vaxis=px, particle=1,2,3,4,5 colour=100;
+plot, table=track,haxis=y,vaxis=py, particle=1,2,3,4,5 colour=100;
+*/
+
+/*plot, table=track,haxis=x,vaxis=px, particle=2, colour=100;
+plot, table=track,haxis=y,vaxis=py, particle=2, colour=100;
+plot, table=track,haxis=x,vaxis=px, particle=3, colour=100;
+plot, table=track,haxis=y,vaxis=py, particle=3, colour=100;
+plot, table=track,haxis=x,vaxis=px, particle=4, colour=100;
+plot, table=track,haxis=y,vaxis=py, particle=4, colour=100;
+plot, table=track,haxis=x,vaxis=px, particle=5, colour=100;
+plot, table=track,haxis=y,vaxis=py, particle=5, colour=100;
+*/
+
+/**** Best regards ****/
+QUIT;
+
+
+// !! Negative Drift error if we don't get the CENTER as reference for the MAKETHIN routine !!
+
+/*** Second part  ***/
+// We add two sextupoles, each right after the end of a quadrupole.
+// They are defined on two different types since they will vary independently to adjust the complete chromaticity of the cell.
+// We don't give a specific value to their strength, instead we will make it vary in a matching sequence to adjust to the recquired ε = 0.
+// Be careful not to forget commenting the MAKETHIN command, or you will have a negative drift error prompt from MadX
+// We compute and get ks1 = 2.40882e-2 and ks2 = -4.60474e-2 which satisfies the conditions.
+
+// deltaQ is the sum over sextupoles of beta * k2 * L * D * deltap / p
+// deltaq = 8 * 23 / 4 / pi * (147.5 * 0.0165 * 2.417 * 1e-3 - 34.44 * 0.0301 * 1.173 * 1e-3)
+// deltaq = 0.068
+
+// We now input the values for our sextupoles and use the MAKETHIN routine to track particles and add a matching sequence
+// We need the matching because of shifts induced by the conversion to thin lens approximation
+// We get a tune q1=q2=0.2469395182 which is almost the 0.25 we had at point 4
+
+// Now we change the initial coordinates of our tracked particle : x=100e-3 y=100e-3, and the ellipse is completely blown away !
+// Without sextupoles its a linear machine so its stable. Sextupoles make it non linear and bring instabilities.
+// The different initial coordinates here bring our particle out of the bucket (aside the separatrix then) and it gets unstable
+// Trying to plot more particles with different initial positions to understand where the transition stable->unstable happens
+// In a real machine we evaluate where the stable regions stands in term of sigmas for the beam (LHc ~ 12-20σ depending on the conditions).

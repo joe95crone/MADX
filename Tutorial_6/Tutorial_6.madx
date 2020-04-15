@@ -1,0 +1,37 @@
+Option, -echo, warn, -info;
+
+// Calling downloaded sequence
+call, file="lhc_opt2015_inj.seq"; // uncomment for first part
+//call, file="lhc_opt2015_coll400.seq"; // uncomment for second part
+
+! Activating called sequence
+use, sequence=lhcb1;
+//use, sequence=lhcb2;
+
+SELECT,FLAG=TWISS, column=keyword, name, s, betx, bety, x, y, dx, dy;
+twiss, file="lhcb1_inj.twiss"; // change name depending on beam and configuration
+plot, HAXIS=s, VAXIS=betx, bety, dx, dy, colour=100;
+plot, HAXIS=s, VAXIS=x, y, colour=100;
+
+
+// First part (all values are taken from beam 1 results)
+// We call the file, activate the sequence and twiss
+// Twiss file tells us the last element (actually, a marker) is at s = 26658.8832m while design report says 26658.883m
+// Searching for IP1 and IP5 in the twiss files gives us their positions and twiss parameters:
+// IP1 is at s = 2785.679958m with betx = 11.00474539m and bety = 11.00406347m
+// IP5 is at s = 16115.27393m with betx = 10.98643428m and bety = 11.01292776m
+
+// At injection, tunes are 64.28 and 59.31
+
+// No, beams don't colllide anywhere at injection.
+
+
+// Second part (all values are taken from beam 1 results)
+// Collision at IP1 is vertically. We know by looking at the X and Y values (literally position compared to reference track).
+// Since X is similar to the values at injection (no collision) but Y is 100 times smaller, approach & collision happens on the Y (vertical) coordinates.
+
+// In collision configuration at IP1 we find betx = 0.400000559m and bety = 0.400000226 about 15 times smaller than at injection.
+// Higher beta means bigger beam (remember beta function is the beam enveloppe). At injection we are matching the SPS parameters.
+// The scheme for LHC is: "injection" (450GeV)-> "ramp" -> "flat-top" (6.5TeV) -> "ATS" (Achromatic Telescopic Squeeze) -> "Colliding".
+// During ATS we play on optics to "squeeze" the beam at IPs and drastically reduce its size (henre smaller beta functions).
+// The reason is smaller beam sizes -> denser beams -> more collisions -> more luminosity, which is the perfornance criteria.

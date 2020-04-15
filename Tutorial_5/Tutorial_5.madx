@@ -1,0 +1,90 @@
+/**** Definition of elements ****/
+qf1Type:QUADRUPOLE, L=0.4, K1:=kf1;
+qf2Type:QUADRUPOLE, L=0.4, K1:=kf2;
+qf3Type:QUADRUPOLE, L=0.4, K1:=kf3;
+qf4Type:QUADRUPOLE, L=0.4, K1:=kf4;
+
+/**** Definition of the sequence ****/
+TFLINE:SEQUENCE, REFER=centre, L=10;
+qf1: qf1Type, at=2;
+qf2: qf2Type, at=4;
+qf3: qf3Type, at=6;
+qf4: qf4Type, at=8;
+ENDSEQUENCE;
+
+/**** Definition of the strength ****/
+kf1=+0.1;
+kf2=+0.1;
+kf3=+0.1;
+kf4=+0.1;
+
+
+/**** Definition of the beam ****/
+beam, particle=proton, energy=2;
+
+/**** Activation of the sequence ****/
+use, sequence=TFLINE;
+
+/**** Operations ****/
+twiss, file="Tutorial_5_1.twiss"; // uncomment this line for question 1, comment otherwise.
+
+// Question 2//
+// Uncomment this block for question 2
+/*
+twiss, BETX=1, ALFX=0,
+       BETY=2, ALFY=0,
+       file="Tutorial_5_2.twiss";
+
+plot, HAXIS=s, VAXIS=betx, bety, colour=100, interpolate;
+plot, HAXIS=s, VAXIS=alfx, alfy, colour=100, interpolate;
+*/
+
+/**** Matching ****/
+// Uncomment this block too for second part //
+/*
+MATCH, sequence=TFLINE,
+// Initial values for matching sequence //
+  BETX=1, ALFX=0,
+  BETY=2, ALFY=0;
+// Values we want to implement //
+  CONSTRAINT, BETX=2, RANGE=#e;   // Range=#e means we want this condition at the end of the last element
+  CONSTRAINT, ALFX=0, RANGE=#e;
+  CONSTRAINT, BETY=1, RANGE=#e;
+  CONSTRAINT, ALFY=0, RANGE=#e;
+// What variables will we act on to do our match // Four constraints -> 4 variables //
+  VARY, NAME=kf1, STEP=0.00001;
+  VARY, NAME=kf2, STEP=0.00001;
+  VARY, NAME=kf3, STEP=0.00001;
+  VARY, NAME=kf4, STEP=0.00001;
+  JACOBIAN, CALLS=500, TOLERANCE=1e-8;
+ENDMATCH;
+*/
+
+/**** Best regards ****/
+QUIT;
+
+
+// First Part //
+// We put 4 focusing quadrupoles in a row. There's only one possible outcome for this, and we do not get periodical conditions.
+// MadX ends but doesn't compute the twiss sequence (see ++++++ warning: Twiss failed:  MAD-X continues)
+// 5 warnings total.
+
+// We impose the initial conditions for betax, alfax, betay and alfay and compute
+// There is 0 warning and we manage to find a solution, however it is weirdly rising for beta and decreasing for alpha.
+// We have a solution, but it is not periodical.
+
+// At the end of the cell, we have the following conditions
+// βx_{end} =100, βy_{end}=50, αx_{end}=-2, αy_{end}=-13.5
+
+// Second Part //
+// We keep the same initial conditions, and input a matching sequence to get some precise values at the end, and compute.
+// We can't find the desired values, it converges to a different solution. See
+// Variable                 Final Value  Initial Value Lower Limit  Upper Limit
+// --------------------------------------------------------------------------------
+// kf1                       3.48008e+00  1.00000e-01 -1.00000e+20  1.00000e+20
+// kf2                      -2.08745e+00  1.00000e-01 -1.00000e+20  1.00000e+20
+// kf3                       2.08745e+00  1.00000e-01 -1.00000e+20  1.00000e+20
+// kf4                      -3.48008e+00  1.00000e-01 -1.00000e+20  1.00000e+20
+
+// Current = 100 A/m^2 * k1 = 10A (with k1 = 0.1)
+// Field = 100 T/m/A * Current * Aperture  = 40T 9with current = 10A)

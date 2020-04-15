@@ -1,0 +1,65 @@
+/**** Definition of elements ****/
+qfType:QUADRUPOLE, L=5.0, K1:=kf;             // Focusing Quadrupole, kfoc
+qdType:QUADRUPOLE, L=5.0, K1:=kd;             // Defocusing Quadrupole, kdefoc
+BDType:SBEND, L=15.0, angle:=kb;              // Dipole, kbending
+
+/**** Definition of the sequence ****/
+FODO:SEQUENCE, REFER=entry, L=100;
+qf: qfType, at=0;                          // Focusing Quadrupole
+BD1: BDType, at=10;                        // Bending Dipole 1
+BD2: BDType, at=30;                        // Bending Dipole 2
+qd: qdType, at=50;                         // Defocusing Quadrupole
+BD3: BDType, at=60;                        // Bending Dipole 3
+BD4: BDType, at=80;                        // Bending Dipole 4
+ENDSEQUENCE;
+
+/**** Definition of the strength ****/
+kf=+0.0056;
+kd=-0.0056;
+kb=2*pi/736;                  // 736 dipoles for 2pi [rad] -> 0.0085 [rad] for 1 dipole
+
+
+/**** Definition of the beam ****/
+beam, particle=proton, energy=7000;
+
+/**** Activation of the sequence ****/
+use, sequence=FODO;
+
+/**** Operations ****/
+twiss, file="Tutorial_3_1.twiss";
+plot, HAXIS=s, VAXIS=betx, bety, colour=100, interpolate;
+plot, HAXIS=s, VAXIS=dx, dy, colour=100, interpolate;
+
+/**** Matching ****/
+//MATCH, sequence=fodo;
+//  GLOBAL, Q1=60.2;
+//  GLOBAL, Q2=60.7;
+//  VARY, NAME=kf, STEP=0.00001;
+//  VARY, NAME=kd, STEP=0.00001;
+//  LMDIF, CALLS=50, TOLERANCE=1e-8;
+//ENDMATCH;
+
+/**** Best regards ****/
+QUIT;
+
+/*** First Part ***/
+// Matching sequence commented ;)
+// We set the dipoles in our FODO cell and compute the sequence
+// We get βmax ~ 160.6036546 which is the similarly the same we had (Tutorial_2) without the dipoles in our FODO cell
+// Relatively the βmax variation (βmax3-βmax2)/βmax2 = 3e-3
+// Regarding the dispersion, its plotted in second page of madx.ps and we have a very small dispersion in the x plane
+
+// The phase advance is given from q1 and q2 who are in [rad]/2pi
+// q1 = q2 = 0.2363728498 (and to degrees --> 1.49 [rad] ~ 85,37° phase advance
+// Tune is the total phase advance: q1 * 736 / 4 = 44.16
+
+/*** Second Part ***/
+// We change the energy to E = 3500 GeV and we compute.
+// The tune doesn't change at all. This is normal, it is related to the integral of 1/β(s) and it only depends on optics.
+// Since β(s) does not depend on the beam energy our result is not surprising, rather comforting.
+
+// We activate the matching sequence and set a wanted tune of 60.2 and 67.2
+// By the way : we don't act on the bending angle of the dipoles because it is imposed by the geometry of the machine.
+// The MadX computation DOES NOT manage to reach the wanted values : the required tune is way too high, cf below
+// HINT : max phase advance for a FODO in thin lense approximation is 180°
+// Max tune we can get with this machine would be the equivalent Q = 0.5 -> absolutely irrealistic of us to ask for 60.x values

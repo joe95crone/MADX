@@ -1,0 +1,57 @@
+/**** Definition of elements ****/
+qfType:QUADRUPOLE, L=5.0, K1:=kf;
+qdType:QUADRUPOLE, L=5.0, K1:=kd;
+
+/**** Definition of the sequence ****/
+FODO:SEQUENCE, REFER=entry, L=100;
+qf: qfType, at=0;
+qd: qdType, at=50;
+ENDSEQUENCE;
+
+/**** Definition of the strength ****/
+/**** Calculated from K = 1 / (L * f) ****/
+kf=+0.001;
+kd=-0.001;
+//kf=+0.01;
+//kd=-0.01;
+
+
+/**** Definition of the beam ****/
+beam, particle=proton, energy=2;
+//beam, particle=proton, energy=0.7;
+
+/**** Activation of the sequence ****/
+use, sequence=FODO;
+
+/**** Operations ****/
+twiss, file="Tutorial_1.twiss";
+plot, HAXIS=s, VAXIS=betx, bety, colour=100, interpolate;
+
+/**** Matching ****/
+MATCH, sequence=fodo;
+  GLOBAL, Q1=.25;
+  GLOBAL, Q2=.25;
+  VARY, NAME=kf, STEP=0.00001;
+  VARY, NAME=kd, STEP=0.00001;
+  LMDIF, CALLS=50, TOLERANCE=1e-8;
+ENDMATCH;
+
+/**** Best regards ****/
+QUIT;
+end;
+
+// Question 2 //
+// We find betamax = 463 so we good
+
+// Question 3 //
+// Phase advance is integral of beta function over the cell.
+// Phase advance rotation happens when the beta function is minimum
+
+// Question 4 //
+// With Etot = 0.7 GeV MadX says "fatal: energy must be > mass" because we took Etot < Eo (rest energy of the proton)
+
+
+// Question 5 //
+// With f = 20m, we just multiply kf and kd by ten
+// MadX says "TWISS failed", "Both modes are unstable for delta(p)/p =     0.000000: cosmux =    -1.914796, cosmuy =    -1.914796"
+// Quadrupole gradient too high so periodic solution doesnt work

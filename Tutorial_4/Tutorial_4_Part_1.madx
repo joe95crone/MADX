@@ -1,0 +1,75 @@
+/**** Definition of elements ****/
+qfType:QUADRUPOLE, L=5.0, K1:=kf;             // Focusing Quadrupole, kfoc
+qdType:QUADRUPOLE, L=5.0, K1:=kd;             // Defocusing Quadrupole, kdefoc
+BDType:SBEND, L=15.0, angle:=kb;                  // Dipôle, kbending
+
+/**** Definition of the sequence ****/
+FODO:SEQUENCE, REFER=entry, L=100;
+qf: qfType, at=0;                          // Focusing Quadrupole
+BD1: BDType, at=10;                        // Bending Dipole 1
+BD2: BDType, at=30;                        // Bending Dipole 2
+qd: qdType, at=50;                         // Defocusing Quadrupole
+BD3: BDType, at=60;                        // Bending Dipole 3
+BD4: BDType, at=80;                        // Bending Dipole 4
+ENDSEQUENCE;
+
+/**** Definition of the strength ****/
+kf=+0.0056;
+kd=-0.0056;
+kb=2*pi/736;                  // 736 dipoles for 2pi [rad] -> 0.0085 [rad] for 1 dipole
+
+
+/**** Definition of the beam ****/
+beam, particle=proton, energy=7000;
+
+/**** Activation of the sequence ****/
+MAKETHIN, SEQUENCE=FODO;
+use, sequence=FODO;
+
+
+/**** Operations ****/
+twiss, file="Tutorial_4_Part_1.twiss";
+plot, HAXIS=s, VAXIS=betx, bety, colour=100, interpolate;
+plot, HAXIS=s, VAXIS=dx, dy, colour=100, interpolate;
+
+
+/**** Matching ****/
+MATCH, sequence=FODO;
+  GLOBAL, Q1=.25;
+  GLOBAL, Q2=.25;
+  VARY, NAME=kf, STEP=0.00001;
+  VARY, NAME=kd, STEP=0.00001;
+  LMDIF, CALLS=50, TOLERANCE=1e-8;
+ENDMATCH;
+
+/*** Tracking ***/
+twiss;
+track,dump;
+start, x= 1e-3, px=0, y= 1e-3, py=0;
+//start, x= 100e-3, px=0, y= 100e-3, py=0;
+//start, x= 1e-3, px=1e-3, y= 1e-3, py=1e-3;
+run,turns=100;
+endtrack;
+plot, table=track, haxis=x, vaxis=px, particle=1, colour=100;
+plot, table=track, haxis=y, vaxis=py, particle=1, colour=100;
+
+/**** Best regards ****/
+QUIT;
+
+/*** First Part  ***/
+// We put the "MAKETHIN, SEQUENCE=FODO" to transform the model in thin lens approximation.
+// We get a warning from MadX that because of lack of detail, each element has been converted to a single thin lens (and not 3 or 5 or whatever number).
+// We activate a match sequence to get a tune of .25 and compute.
+// Chromaticities are found in the output under dqx but they are not normalized -> we have to multiply by deltap/p which is given in the question.
+// We find ε = dq/(dp/p) ~ -318.1861 (we have ε_{x} = ε_{y})
+
+// We track a specific particle and plot its evolution over the turns during the computation
+// The particle describes an ellispe in phase-space, which is skewed on the right. We see only 4 points (not 5, one is part of the legend) which means the particle
+// comes back to its original position after 4 turns -> does 4 turns, which is in accordance to the fact that Q=.25
+
+// Now we change the initial coordinates and compute
+// We have almost the same ellispe shape, however the scales are 2 orders of magnitude higher.
+// Since we have a linear machine we're not surprised that bigger offset -> bigger phase space.
+
+// Now we take a particle that is starting slightly off-momentum
+// The phase space is changed : the momentum given changes the oscillations of the particle, thus it doesn't revolve around the same points in phase space

@@ -1,0 +1,54 @@
+/**** Definition of elements ****/
+qfType:QUADRUPOLE, L=5.0, K1:=kf;
+qdType:QUADRUPOLE, L=5.0, K1:=kd;
+
+/**** Definition of the sequence ****/
+FODO:SEQUENCE, REFER=entry, L=100;
+qf: qfType, at=0;
+qd: qdType, at=50;
+ENDSEQUENCE;
+
+/**** Definition of the strength ****/
+kf=+0.0056;
+kd=-0.0056;
+//kf=+0.0028;
+//kd=-0.0028;
+
+/**** Definition of the beam ****/
+beam, particle=proton, energy=7000;
+
+/**** Activation of the sequence ****/
+use, sequence=FODO;
+
+/**** Operations ****/
+twiss, file="Tutorial_2.twiss";
+plot, HAXIS=s, VAXIS=betx, bety, colour=100, interpolate;
+
+
+
+/**** Best regards ****/
+QUIT;
+
+/*** First Part ***/
+// We want deltamu = 90° so deltamu/pi = 0,5.
+// On figure 1 this corresponds to K1.Lcell.Lquad = 2,8
+// Which in turns corresponds to K1 = 0.0056
+
+// Input this and run madx
+// We want to verify values of q1 and q2. They're given in radian/(2 * pi).
+// This is a useful convention because if you think of phase advance as the trigonometric circle (a 2pi phase advance is a 0 phase advance), then 0.25 corresponds to 90 degrees.
+// I get 1.484 radian ~ 85,03°. Pretty close to the wanted result!
+
+
+/*** Second Part ***/
+// The βmax given by MadX is 160.6036546. On the madx.ps plot, the βmin ~ 33.
+// We still have K1.Lcell.Lquad = 2,8 which corresponds to βmax/Lcell ~ 1.75 -> βmax = 175 not that far from our computation,
+// and even close with the interpolation.
+// For Etot = 7TeV, εn = 3mrad.mm we get the 𝜎 = sqrt(εnβ/βrƔr) = 2.6e-4m
+// (Ɣr = 7Tev/0.938Gev = 7462.69)
+
+// We halve the focusing strength of the quadrupoles
+// We get βmax = 205 but interpolation provides βmax ~ 210. Same, we get βmin ~ 105.
+// q1 = 0.109 -> phase advance of 38,96°
+// If we halve K1 we halve K1.Lcell.Lquad which becomes 1.4 and corresponds to deltamu/pi = 0,21 -> phase advance ~ 37.82° super close to our computation.
+// Also corresponds to βmax/Lcell ~ 2.1 -> βmax ~ 210 all good :)
